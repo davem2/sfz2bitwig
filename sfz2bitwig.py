@@ -63,6 +63,7 @@ class Multisample(object):
         pass
 
     def initFromSFZ(self, sfzfile):
+        cur_global_defaults = {}
         cur_control_defaults = {}
         cur_group_defaults = {}
 
@@ -84,17 +85,25 @@ class Multisample(object):
 
                     logging.debug("Set control default: {}={}".format(k,cur_control_defaults[k]))
 
-            if sectionName == "group":
+            elif sectionName == "group":
                 cur_group_defaults = {}
                 for k, v in section[1].items():
                     cur_group_defaults[k] = v
                     logging.debug("Set group default: {}={}".format(k,v))
 
+            elif sectionName == "global":
+                cur_global_defaults = {}
+                for k, v in section[1].items():
+                    cur_global_defaults[k] = v
+                    logging.debug("Set global default: {}={}".format(k,v))
+
             elif sectionName == "region":
                 newsample = {}
 
-                opcodes = dict(cur_group_defaults)
-                opcodes.update(dict(section[1]))
+                # Apply settings with priority global < group < region
+                opcodes = dict(cur_global_defaults)
+                opcodes.update(cur_group_defaults)
+                opcodes.update(section[1])
 
                 for k, v in opcodes.items():
                     logging.debug(" {}={}".format(k,v))
