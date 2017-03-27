@@ -110,13 +110,10 @@ class Multisample(object):
                     elif k == "hivel":
                         newsample['velocityhigh'] = v
                     elif k == "volume":
-                        #TODO how does volume translate to gain?
-                        #newsample['gain'] = v
-                        newsample['gain'] = 0
+                        newsample['gain'] = v
                     else:
                         logging.warning("Ignoring opcode {}={}".format(k,v))
 
-                newsample['gain'] = '0.000'
                 newsample['sample-start'] = '0.000'
                 newsampleFullPath = os.path.join(defaultPath,newsample['file'])
                 newsample['filepath'] = newsampleFullPath
