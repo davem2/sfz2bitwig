@@ -23,6 +23,7 @@ VERSION="0.1.0" # MAJOR.MINOR.PATCH | http://semver.org
 
 
 from docopt import docopt
+from sfzparser import SFZParser
 
 import zipfile
 import wave
@@ -47,9 +48,8 @@ def main():
     logging.debug(args)
 
     # Convert file
-    sfz = SFZParser(args['<sfzfile>'])
     multisamp = Multisample()
-    multisamp.initFromSFZ(sfz)
+    multisamp.initFromSFZ(args['<sfzfile>'])
     multisamp.write()
 
     return
@@ -58,15 +58,15 @@ def main():
 class Multisample(object):
     name = 'default'
     samples = []
-    sfzSampleBasePath = None
 
     def __init__(self, sfz=None):
         pass
 
-    def initFromSFZ(self, sfz):
+    def initFromSFZ(self, sfzfile):
         defaultPath = None
+        sfz = SFZParser(sfzfile)
 
-        self.name = "{}".format(os.path.splitext(sfz.path)[0])
+        self.name = "{}".format(os.path.splitext(sfzfile)[0])
 
         for section in sfz.sections:
             sectionName = section[0]
@@ -75,8 +75,7 @@ class Multisample(object):
                 for k, v in section[1].items():
                     logging.debug(" {}={}".format(k,v))
                     if k == "default_path":
-                        defaultPath = os.path.join(os.path.dirname(os.path.abspath(sfz.path)),os.path.normpath(v.replace('\\','/')))
-                        self.sfzSampleBasePath = defaultPath
+                        defaultPath = os.path.join(os.path.dirname(os.path.abspath(sfzfile)),os.path.normpath(v.replace('\\','/')))
                     else:
                         logging.error("Unhandled key {}".format(k))
 
@@ -113,6 +112,7 @@ class Multisample(object):
                 newsample['gain'] = '0.000'
                 newsample['sample-start'] = '0.000'
                 newsampleFullPath = os.path.join(defaultPath,newsample['file'])
+                newsample['filepath'] = newsampleFullPath
                 newsample['sample-stop'] = self.getsamplecount(newsampleFullPath)
                 newsample['tune'] = '0.0'
                 newsample['track'] = 'true'
@@ -188,10 +188,10 @@ class Multisample(object):
             zf.writestr('multisample.xml',xml)
             samplesWritten = []
             for sample in self.samples:
-                samplepath = os.path.join(self.sfzSampleBasePath,sample['file'])
-                if samplepath not in samplesWritten:
-                    zf.write(samplepath,sample['file'])
-                    samplesWritten.append(samplepath)
+                logging.debug("Adding sample: {} ({})".format(sample['file'],sample['filepath']))
+                if sample['filepath'] not in samplesWritten:
+                    zf.write(sample['filepath'],sample['file'])
+                    samplesWritten.append(sample['filepath'])
         finally:
             zf.close
 
@@ -201,60 +201,6 @@ class Multisample(object):
         sampcount = ifile.getnframes()
 
         return sampcount
-
-
-class SFZParser(object):
-    # sfz parsing based off https://github.com/SpotlightKid/sfzparser/blob/master/sfzparser.py
-    rx_section = re.compile('^<([^>]+)>\s?')
-
-    def __init__(self, path, encoding=None, **kwargs):
-        self.encoding = encoding
-        self.path = path
-        self.groups = [] #TODO.. not sure function of groups in sfz or if they translate to multisample
-        self.sections = []
-
-        with open(path, encoding=self.encoding or 'utf-8') as sfz:
-            self.parse(sfz)
-
-    def parse(self, sfz):
-        sections = self.sections
-        cur_section = {}
-        value = None
-
-        for line in sfz:
-            line = line.strip()
-            #strip out comments
-            line = re.sub('//.+$','',line)
-
-            if not line:
-                continue
-
-            while line:
-                match = self.rx_section.search(line)
-                if match:
-                    if cur_section:
-                        sections.append((section_name, cur_section))
-                        cur_section = {}
-
-                    section_name = match.group(1).strip()
-                    line = line[match.end():].lstrip()
-                elif "=" in line:
-                    line, _, value = line.rpartition('=')
-                    if '=' in line:
-                        line, key = line.rsplit(None, 1)
-                        cur_section[key] = value
-                        value = None
-                elif value:
-                    line, key = None, line
-                    cur_section[key] = value
-                else:
-                    logging.warning("ignoring line: {}", line)
-                    break
-
-        if cur_section:
-            sections.append((section_name, cur_section))
-
-        return sections
 
 
 if __name__ == "__main__":
