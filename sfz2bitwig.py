@@ -63,8 +63,10 @@ class Multisample(object):
         pass
 
     def initFromSFZ(self, sfzfile):
+        cur_control_defaults = {}
+        cur_group_defaults = {}
+
         logging.info("Converting {} to multisample".format(sfzfile))
-        defaultPath = None
         sfz = SFZParser(sfzfile)
         logging.debug("Finished parsing {}".format(sfzfile))
 
@@ -74,24 +76,27 @@ class Multisample(object):
             sectionName = section[0]
             logging.debug("start section <{}>".format(sectionName))
             if sectionName == "control":
+                cur_control_defaults = {}
                 for k, v in section[1].items():
-                    logging.debug(" {}={}".format(k,v))
+                    cur_control_defaults[k] = v
                     if k == "default_path":
-                        defaultPath = os.path.join(os.path.dirname(os.path.abspath(sfzfile)),os.path.normpath(v.replace('\\','/')))
-                        logging.debug("defaultPath changed to {}".format(defaultPath))
-                    else:
-                        logging.warning("Ignoring opcode {}={}".format(k,v))
+                        cur_control_defaults["default_path"] = os.path.join(os.path.dirname(os.path.abspath(sfzfile)),os.path.normpath(v.replace('\\','/')))
+
+                    logging.debug("Set control default: {}={}".format(k,cur_control_defaults[k]))
+
+            if sectionName == "group":
+                cur_group_defaults = {}
+                for k, v in section[1].items():
+                    cur_group_defaults[k] = v
+                    logging.debug("Set group default: {}={}".format(k,v))
 
             elif sectionName == "region":
                 newsample = {}
-                newsample['file'] = None
-                newsample['keylow'] = 0
-                newsample['keyhigh'] = 127
-                newsample['root'] = 0
-                newsample['velocitylow'] = 0
-                newsample['velocityhigh'] = 127
 
-                for k, v in section[1].items():
+                opcodes = dict(cur_group_defaults)
+                opcodes.update(dict(section[1]))
+
+                for k, v in opcodes.items():
                     logging.debug(" {}={}".format(k,v))
                     if k == "sample":
                         newsample['file'] = v
@@ -114,8 +119,9 @@ class Multisample(object):
                     else:
                         logging.warning("Ignoring opcode {}={}".format(k,v))
 
+                # TODO: finish loops/pitch etc..
                 newsample['sample-start'] = '0.000'
-                newsampleFullPath = os.path.join(defaultPath,newsample['file'])
+                newsampleFullPath = os.path.join(cur_control_defaults["default_path"],newsample['file'])
                 newsample['filepath'] = newsampleFullPath
                 newsample['sample-stop'] = self.getsamplecount(newsampleFullPath)
                 newsample['tune'] = '0.0'
@@ -159,10 +165,10 @@ class Multisample(object):
         xml += '   <layer name="Default">\n'
 
         for sample in self.samples:
-            xml += '      <sample file="{}" gain="{}" sample-start="{}" sample-stop="{}">\n'.format(sample['file'],sample['gain'],sample['sample-start'],sample['sample-stop'])
-            xml += '         <key high="{}" low="{}" root="{}" track="{}" tune="{}"/>\n'.format(sample['keyhigh'],sample['keylow'],sample['root'],sample['track'],sample['tune'])
-            vhigh = int(sample['velocityhigh'])
-            vlow = int(sample['velocitylow'])
+            xml += '      <sample file="{}" gain="{}" sample-start="{}" sample-stop="{}">\n'.format(sample.get('file',''),sample.get('gain',''),sample.get('sample-start',''),sample.get('sample-stop',''))
+            xml += '         <key high="{}" low="{}" root="{}" track="{}" tune="{}"/>\n'.format(sample.get('keyhigh',''),sample.get('keylow',''),sample.get('root',''),sample.get('track',''),sample.get('tune',''))
+            vhigh = int(sample.get('velocityhigh','127'))
+            vlow = int(sample.get('velocitylow','0'))
             if vhigh == 127 and vlow == 0:
                 xml += '         <velocity/>\n'
             elif vlow == 0:
@@ -172,7 +178,7 @@ class Multisample(object):
             else:
                 xml += '         <velocity high="{}" low="{}"/>\n'.format(vhigh,vlow)
 
-            xml += '         <loop mode="{}" start="{}" stop="{}"/>\n'.format(sample['loopmode'],sample['loopstart'],sample['loopstop'])
+            xml += '         <loop mode="{}" start="{}" stop="{}"/>\n'.format(sample.get('loopmode',''),sample.get('loopstart',''),sample.get('loopstop',''))
             xml += '      </sample>\n'
 
         xml += '    </layer>\n'
@@ -195,12 +201,12 @@ class Multisample(object):
             zf.writestr('multisample.xml',xml)
             samplesWritten = []
             for sample in self.samples:
-                if sample['filepath'] not in samplesWritten:
-                    logging.debug("Adding sample: {} ({})".format(sample['file'],sample['filepath']))
-                    zf.write(sample['filepath'],sample['file'])
-                    samplesWritten.append(sample['filepath'])
+                if sample.get('filepath','') not in samplesWritten:
+                    logging.debug("Adding sample: {} ({})".format(sample.get('file',''),sample.get('filepath','')))
+                    zf.write(sample.get('filepath',''),sample.get('file',''))
+                    samplesWritten.append(sample.get('filepath',''))
                 else:
-                    logging.warning("Skipping duplicate sample: {} ({})".format(sample['file'],sample['filepath']))
+                    logging.warning("Skipping duplicate sample: {} ({})".format(sample.get('file',''),sample.get('filepath','')))
 
         finally:
             zf.close
