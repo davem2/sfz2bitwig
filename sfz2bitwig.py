@@ -80,7 +80,7 @@ class Multisample(object):
                         defaultPath = os.path.join(os.path.dirname(os.path.abspath(sfzfile)),os.path.normpath(v.replace('\\','/')))
                         logging.debug("defaultPath changed to {}".format(defaultPath))
                     else:
-                        logging.error("Unhandled key {}".format(k))
+                        logging.warning("Ignoring opcode {}={}".format(k,v))
 
             elif sectionName == "region":
                 newsample = {}
@@ -101,6 +101,10 @@ class Multisample(object):
                         newsample['keyhigh'] = v
                     elif k == "pitch_keycenter":
                         newsample['root'] = v
+                    elif k == "key":
+                        newsample['keylow'] = v
+                        newsample['keyhigh'] = v
+                        newsample['root'] = v
                     elif k == "lovel":
                         newsample['velocitylow'] = v
                     elif k == "hivel":
@@ -110,7 +114,7 @@ class Multisample(object):
                         #newsample['gain'] = v
                         newsample['gain'] = 0
                     else:
-                        logging.error("Unhandled key {}".format(k))
+                        logging.warning("Ignoring opcode {}={}".format(k,v))
 
                 newsample['gain'] = '0.000'
                 newsample['sample-start'] = '0.000'
@@ -128,19 +132,19 @@ class Multisample(object):
 
             elif sectionName == "global":
                 for k, v in section[1].items():
-                    logging.debug(" {}={}".format(k,v))
+                    logging.warning("Ignoring opcode {}={}".format(k,v))
             elif sectionName == "group":
                 for k, v in section[1].items():
-                    logging.debug(" {}={}".format(k,v))
+                    logging.warning("Ignoring opcode {}={}".format(k,v))
             elif sectionName == "curve":
                 for k, v in section[1].items():
-                    logging.debug(" {}={}".format(k,v))
+                    logging.warning("Ignoring opcode {}={}".format(k,v))
             elif sectionName == "effect":
                 for k, v in section[1].items():
-                    logging.debug(" {}={}".format(k,v))
+                    logging.warning("Ignoring opcode {}={}".format(k,v))
 
             else:
-                logging.error("Unhandled section {}".format(sectionName))
+                logging.warning("Unhandled section {}".format(sectionName))
 
             #TODO handle loops? tuning? sample start/end?
 
