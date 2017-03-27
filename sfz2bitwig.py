@@ -63,19 +63,22 @@ class Multisample(object):
         pass
 
     def initFromSFZ(self, sfzfile):
+        logging.info("Converting {} to multisample".format(sfzfile))
         defaultPath = None
         sfz = SFZParser(sfzfile)
+        logging.debug("Finished parsing {}".format(sfzfile))
 
         self.name = "{}".format(os.path.splitext(sfzfile)[0])
 
         for section in sfz.sections:
             sectionName = section[0]
-            logging.debug("=== section <{}>".format(sectionName))
+            logging.debug("start section <{}>".format(sectionName))
             if sectionName == "control":
                 for k, v in section[1].items():
                     logging.debug(" {}={}".format(k,v))
                     if k == "default_path":
                         defaultPath = os.path.join(os.path.dirname(os.path.abspath(sfzfile)),os.path.normpath(v.replace('\\','/')))
+                        logging.debug("defaultPath changed to {}".format(defaultPath))
                     else:
                         logging.error("Unhandled key {}".format(k))
 
@@ -121,6 +124,7 @@ class Multisample(object):
                 newsample['loopstop'] = '0.000'
 
                 self.samples.append(newsample)
+                logging.debug("Converted sample {}".format(newsample['file']))
 
             elif sectionName == "global":
                 for k, v in section[1].items():
@@ -183,17 +187,23 @@ class Multisample(object):
             outpath = "{}.multisample".format(self.name)
 
         # Build zip containing multisample.xml and sample files
+        logging.debug("Building multisample zip container {}".format(outpath))
         zf = zipfile.ZipFile(outpath,mode='w',compression=zipfile.ZIP_DEFLATED)
         try:
+            logging.debug("Adding multisample.xml")
             zf.writestr('multisample.xml',xml)
             samplesWritten = []
             for sample in self.samples:
-                logging.debug("Adding sample: {} ({})".format(sample['file'],sample['filepath']))
                 if sample['filepath'] not in samplesWritten:
+                    logging.debug("Adding sample: {} ({})".format(sample['file'],sample['filepath']))
                     zf.write(sample['filepath'],sample['file'])
                     samplesWritten.append(sample['filepath'])
+                else:
+                    logging.warning("Skipping duplicate sample: {} ({})".format(sample['file'],sample['filepath']))
+
         finally:
             zf.close
+            logging.info("Generated multisample {}".format(outpath))
 
 
     def getsamplecount(self, path):
