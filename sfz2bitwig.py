@@ -108,7 +108,7 @@ class Multisample(object):
                 for k, v in opcodes.items():
                     logging.debug(" {}={}".format(k,v))
                     if k == "sample":
-                        newsample['file'] = v
+                        newsample['file'] = os.path.normpath(v.replace('\\','/'))
                     elif k == "lokey":
                         newsample['keylow'] = v
                     elif k == "hikey":
@@ -130,7 +130,8 @@ class Multisample(object):
 
                 # TODO: finish loops/pitch etc..
                 newsample['sample-start'] = '0.000'
-                newsampleFullPath = os.path.join(cur_control_defaults["default_path"],newsample['file'])
+                defaultPath = cur_control_defaults.get('default_path',os.path.dirname(os.path.abspath(sfzfile)))
+                newsampleFullPath = os.path.join(defaultPath,newsample['file'])
                 newsample['filepath'] = newsampleFullPath
                 newsample['sample-stop'] = self.getsamplecount(newsampleFullPath)
                 newsample['tune'] = '0.0'
@@ -211,11 +212,11 @@ class Multisample(object):
             samplesWritten = []
             for sample in self.samples:
                 if sample.get('filepath','') not in samplesWritten:
-                    logging.debug("Adding sample: {} ({})".format(sample.get('file',''),sample.get('filepath','')))
-                    zf.write(sample.get('filepath',''),sample.get('file',''))
+                    logging.debug("Adding sample: {} ({})".format(os.path.basename(sample.get('file','')),sample.get('filepath','')))
+                    zf.write(sample.get('filepath',''),os.path.basename(sample.get('file','')))
                     samplesWritten.append(sample.get('filepath',''))
                 else:
-                    logging.warning("Skipping duplicate sample: {} ({})".format(sample.get('file',''),sample.get('filepath','')))
+                    logging.warning("Skipping duplicate sample: {} ({})".format(os.path.basename(sample.get('file','')),sample.get('filepath','')))
 
         finally:
             zf.close
