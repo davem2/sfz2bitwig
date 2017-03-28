@@ -1,4 +1,4 @@
-Full spec at: [http://drealm.info/sfz/plj-sfz.xhtml#what]
+Full(ish) spec at: [http://drealm.info/sfz/plj-sfz.xhtml]
 
 ## Example .sfz file
 
@@ -55,6 +55,13 @@ Opcodes in <global> and <group> are applied to all <region> sections within that
     Opcodes here will be applied to all regions in this group
 
 ### \<region>
+
+
+### \<curve>
+### \<effect>
+
+
+## Opcodes
     sample = KSHarp_G1_mp.wav
     lokey = (note code or letter)
     hikey = (note code or letter)
@@ -63,11 +70,20 @@ Opcodes in <global> and <group> are applied to all <region> sections within that
     pitch_keytrack = (bool? have only seen pitch_keytrack=0, defaults to true when opcode is not present)
     lovel = (0-127) velocity range covered by this sample
     hivel = (0-127)
-    volume = 10 (unknown, dbs? 10 max?)
+    volume = 10 (dbs)
+    tune = (-100 to 100) cents
+    transpose = (-127 to 127) semitones
+    loop_mode = one_shot - play whole sample once
+                loop_continuous - loop until the amplitude EG reaches zero; default if loop points defined
+                loop_sustain - loop until Release and then play through to the end point or amplitude EG reaching zero
+    loop_start = (0 to 4Gb) offset in samples
+    loop_end = (0 to 4Gb) offset in samples
+    offset = (0 to 4Gb) offset in samples
+    end = (0 to 4Gb) offset in samples
 
-### \<curve>
-### \<effect>
-
+    pan = (?)
+    seq_length
+    seq_position
 
 ### note codes
     c-1 = 0

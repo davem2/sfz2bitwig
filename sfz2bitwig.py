@@ -127,7 +127,6 @@ class Multisample(object):
                         newsample['keylow'] = sfz_note_to_midi_key(v)
                         newsample['keyhigh'] = sfz_note_to_midi_key(v)
                         newsample['root'] = sfz_note_to_midi_key(v)
-
                     elif k == "pitch_keytrack":
                         newsample['track'] = v
                     elif k == "lovel":
@@ -138,6 +137,14 @@ class Multisample(object):
                         newsample['gain'] = v
                     elif k == "tune":
                         newsample['tune'] = int(v) * 0.01
+                    elif k == "loop_mode":
+                        if v != 'one_shot':
+                            newsample['loopmode'] = 'sustain' # bitwig currently supports off or sustain
+                    elif k == "loop_start":
+                        newsample['loopstart'] = v
+                    elif k == "loop_end":
+                        newsample['loopstop'] = v
+
                     else:
                         logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
 
