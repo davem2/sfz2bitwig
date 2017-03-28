@@ -15,10 +15,15 @@ SFZ_NOTE_LETTER_OFFSET = {'a': 9, 'b': 11, 'c': 0, 'd': 2, 'e': 4, 'f': 5, 'g': 
 
 
 def sfz_note_to_midi_key(sfz_note):
-    sharp = '#' in sfz_note
     letter = sfz_note[0].lower()
+    if letter not in SFZ_NOTE_LETTER_OFFSET.keys():
+        return sfz_note
+
+    sharp = '#' in sfz_note
     octave = int(sfz_note[-1])
-    return SFZ_NOTE_LETTER_OFFSET[letter] + ((octave + 1) * 12) + (1 if sharp else 0)
+    #return SFZ_NOTE_LETTER_OFFSET[letter] + ((octave + 1) * 12) + (1 if sharp else 0)
+    #Notes in bitwig multisample are an octave different (i.e. c4=60, not c3=60)
+    return SFZ_NOTE_LETTER_OFFSET[letter] + ((octave + 2) * 12) + (1 if sharp else 0)
 
 
 def freq_to_cutoff(param):

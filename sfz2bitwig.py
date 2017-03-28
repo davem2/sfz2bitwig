@@ -24,6 +24,7 @@ VERSION="0.1.0" # MAJOR.MINOR.PATCH | http://semver.org
 
 from docopt import docopt
 from sfzparser import SFZParser
+from sfzparser import sfz_note_to_midi_key
 
 import zipfile
 import wave
@@ -110,15 +111,15 @@ class Multisample(object):
                     if k == "sample":
                         newsample['file'] = os.path.normpath(v.replace('\\','/'))
                     elif k == "lokey":
-                        newsample['keylow'] = v
+                        newsample['keylow'] = sfz_note_to_midi_key(v)
                     elif k == "hikey":
-                        newsample['keyhigh'] = v
+                        newsample['keyhigh'] = sfz_note_to_midi_key(v)
                     elif k == "pitch_keycenter":
-                        newsample['root'] = v
+                        newsample['root'] = sfz_note_to_midi_key(v)
                     elif k == "key":
-                        newsample['keylow'] = v
-                        newsample['keyhigh'] = v
-                        newsample['root'] = v
+                        newsample['keylow'] = sfz_note_to_midi_key(v)
+                        newsample['keyhigh'] = sfz_note_to_midi_key(v)
+                        newsample['root'] = sfz_note_to_midi_key(v)
                     elif k == "lovel":
                         newsample['velocitylow'] = v
                     elif k == "hivel":
@@ -175,7 +176,7 @@ class Multisample(object):
         xml += '   <layer name="Default">\n'
 
         for sample in self.samples:
-            xml += '      <sample file="{}" gain="{}" sample-start="{}" sample-stop="{}">\n'.format(sample.get('file',''),sample.get('gain',''),sample.get('sample-start',''),sample.get('sample-stop',''))
+            xml += '      <sample file="{}" gain="{}" sample-start="{}" sample-stop="{}">\n'.format(os.path.basename(sample.get('file','')),sample.get('gain',''),sample.get('sample-start',''),sample.get('sample-stop',''))
             xml += '         <key high="{}" low="{}" root="{}" track="{}" tune="{}"/>\n'.format(sample.get('keyhigh',''),sample.get('keylow',''),sample.get('root',''),sample.get('track',''),sample.get('tune',''))
             vhigh = int(sample.get('velocityhigh','127'))
             vlow = int(sample.get('velocitylow','0'))
