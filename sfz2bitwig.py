@@ -106,6 +106,11 @@ class Multisample(object):
                 opcodes.update(cur_group_defaults)
                 opcodes.update(section[1])
 
+                newsample['track'] = 'true'
+                newsample['loopmode'] = 'off'
+                newsample['loopstart'] = '0.000'
+                newsample['loopstop'] = '0.000'
+
                 for k, v in opcodes.items():
                     logging.debug(" {}={}".format(k,v))
                     if k == "sample":
@@ -122,6 +127,9 @@ class Multisample(object):
                         newsample['keylow'] = sfz_note_to_midi_key(v)
                         newsample['keyhigh'] = sfz_note_to_midi_key(v)
                         newsample['root'] = sfz_note_to_midi_key(v)
+
+                    elif k == "pitch_keytrack":
+                        newsample['track'] = v
                     elif k == "lovel":
                         newsample['velocitylow'] = v
                     elif k == "hivel":
@@ -133,20 +141,16 @@ class Multisample(object):
                     else:
                         logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
 
-                # TODO: finish loops/pitch etc..
-                newsample['sample-start'] = '0.000'
+                # TODO: finish loops
                 defaultPath = cur_control_defaults.get('default_path',os.path.dirname(os.path.abspath(sfzfile)))
                 newsampleFullPath = os.path.join(defaultPath,newsample['file'])
                 newsample['filepath'] = newsampleFullPath
+                newsample['sample-start'] = '0.000'
                 newsample['sample-stop'] = self.getsamplecount(newsampleFullPath)
-                newsample['track'] = 'true'
-                newsample['loopmode'] = 'off'
-                newsample['loopstart'] = '0.000'
-                newsample['loopstop'] = '0.000'
 
-                if 'root' not in newsample:
+                if 'root' not in newsample and newsample['track'] == 'true':
                     logging.error("No pitch_keycenter for sample {}, root of sample will need to be manually adjusted in Bitwig".format(newsample['file']))
-                    newsample['root'] = 0
+                    newsample['root'] = 0 # bitwig defaults to c4 when root is not given, make the issue more obvious with a more extreme value
 
                 self.samples.append(newsample)
                 logging.debug("Converted sample {}".format(newsample['file']))

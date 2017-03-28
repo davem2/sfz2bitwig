@@ -31,8 +31,8 @@
 #### attribs
     file = "Freak Ass Vibraphone F2 01.wav" (sample filename)
     gain = "0.000" (db?)
-    sample-start = "0.000" (samples?)
-    sample-stop = "623932.000" (samples?)
+    sample-start = "0.000" (samples)
+    sample-stop = "623932.000" (samples)
 
 #### elements
 
@@ -40,8 +40,9 @@
     high = (note code)
     low = (note code)
     root = (note code)
-    track = (true,false)
+    track = (true,false) is keytracking enabled
     tune = "0.0" (-1, to 1)(measured in semitones, 5cents == 0.05)
+    *reverse = (option exists in sampler, but this field seems to be missing, bitwig sampler reverse button state does not appear to be saved)
 
 ##### \<velocity>
     high = (0-127) not needed when high=127
@@ -49,9 +50,9 @@
 
     * If high or low values are given when they are not needed, then the Bitwig audio engine deactivates when multisample instrument is loaded
 ##### \<loop>
-    mode = (off,sustain,others?)
-    start = "0.000" (samples?)
-    stop = "623932.000" (samples?)
+    mode = (off,sustain)
+    start = "0.000" (samples)
+    stop = "623932.000" (samples)
 
 ## Note codes
     c-2 = 0

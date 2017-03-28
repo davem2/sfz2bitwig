@@ -43,18 +43,24 @@ Full spec at: [http://drealm.info/sfz/plj-sfz.xhtml#what]
 
 ## Section headers
 
+Opcodes in <global> and <group> are applied to all <region> sections within that group/file. If duplicate opcodes are found priority is given to <region> over <group> over <global>
+
 ### \<control>
     default_path = Strings\Harp\
 
 ### \<global>
+    Opcodes here will be applied to all regions
 
 ### \<group>
+    Opcodes here will be applied to all regions in this group
 
 ### \<region>
     sample = KSHarp_G1_mp.wav
-    lokey = (note code)
-    hikey = (note code)
-    pitch_keycenter = (note code)
+    lokey = (note code or letter)
+    hikey = (note code or letter)
+    pitch_keycenter = (note code or letter)
+    key = (note code or letter) shortcut to set lokey,hikey and pitch_keycenter to the same note
+    pitch_keytrack = (bool? have only seen pitch_keytrack=0, defaults to true when opcode is not present)
     lovel = (0-127) velocity range covered by this sample
     hivel = (0-127)
     volume = 10 (unknown, dbs? 10 max?)
