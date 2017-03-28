@@ -110,6 +110,8 @@ class Multisample(object):
                     logging.debug(" {}={}".format(k,v))
                     if k == "sample":
                         newsample['file'] = os.path.normpath(v.replace('\\','/'))
+                        if newsample['file'][0] == '/': # relative path should not contain leading slash
+                            newsample['file'] = newsample['file'][1:]
                     elif k == "lokey":
                         newsample['keylow'] = sfz_note_to_midi_key(v)
                     elif k == "hikey":
