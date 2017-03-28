@@ -131,7 +131,7 @@ class Multisample(object):
                     elif k == "tune":
                         newsample['tune'] = int(v) * 0.01
                     else:
-                        logging.warning("Ignoring opcode {}={}".format(k,v))
+                        logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
 
                 # TODO: finish loops/pitch etc..
                 newsample['sample-start'] = '0.000'
@@ -144,22 +144,27 @@ class Multisample(object):
                 newsample['loopstart'] = '0.000'
                 newsample['loopstop'] = '0.000'
 
+                if 'root' not in newsample:
+                    logging.error("No pitch_keycenter for sample {}, root of sample will need to be manually adjusted in Bitwig".format(newsample['file']))
+                    newsample['root'] = 0
+
                 self.samples.append(newsample)
                 logging.debug("Converted sample {}".format(newsample['file']))
 
             elif sectionName == "global":
                 for k, v in section[1].items():
-                    logging.warning("Ignoring opcode {}={}".format(k,v))
+                    logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "group":
                 for k, v in section[1].items():
-                    logging.warning("Ignoring opcode {}={}".format(k,v))
+                    logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "curve":
                 for k, v in section[1].items():
-                    logging.warning("Ignoring opcode {}={}".format(k,v))
+                    logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "effect":
                 for k, v in section[1].items():
-                    logging.warning("Ignoring opcode {}={}".format(k,v))
-
+                    logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
+            elif sectionName == "comment":
+                pass
             else:
                 logging.warning("Unhandled section {}".format(sectionName))
 
