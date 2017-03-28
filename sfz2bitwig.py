@@ -128,6 +128,8 @@ class Multisample(object):
                         newsample['velocityhigh'] = v
                     elif k == "volume":
                         newsample['gain'] = v
+                    elif k == "tune":
+                        newsample['tune'] = int(v) * 0.01
                     else:
                         logging.warning("Ignoring opcode {}={}".format(k,v))
 
@@ -137,7 +139,6 @@ class Multisample(object):
                 newsampleFullPath = os.path.join(defaultPath,newsample['file'])
                 newsample['filepath'] = newsampleFullPath
                 newsample['sample-stop'] = self.getsamplecount(newsampleFullPath)
-                newsample['tune'] = '0.0'
                 newsample['track'] = 'true'
                 newsample['loopmode'] = 'off'
                 newsample['loopstart'] = '0.000'
