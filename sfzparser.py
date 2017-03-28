@@ -21,8 +21,8 @@ def sfz_note_to_midi_key(sfz_note):
 
     sharp = '#' in sfz_note
     octave = int(sfz_note[-1])
-    #return SFZ_NOTE_LETTER_OFFSET[letter] + ((octave + 1) * 12) + (1 if sharp else 0)
-    #Notes in bitwig multisample are an octave different (i.e. c4=60, not c3=60)
+
+    # Notes in bitwig multisample are an octave off (i.e. c4=60, not c3=60)
     return SFZ_NOTE_LETTER_OFFSET[letter] + ((octave + 2) * 12) + (1 if sharp else 0)
 
 
@@ -39,7 +39,7 @@ class SFZParser(object):
         self.groups = []
         self.sections = []
 
-        with open(sfz_path, encoding=self.encoding or 'utf-8') as sfz:
+        with open(sfz_path, encoding=self.encoding or 'utf-8-sig') as sfz:
             self.parse(sfz)
 
     def parse(self, sfz):
