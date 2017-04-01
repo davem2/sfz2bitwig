@@ -61,7 +61,6 @@ def main():
 class Multisample(object):
     name = 'default'
     samples = []
-    adsr_histogram = defaultdict(int)
     sfz_opcodes_ignored = defaultdict(int)
 
     def __init__(self, sfz=None):
@@ -150,9 +149,6 @@ class Multisample(object):
                         newsample['loopstop'] = v
 
                     else:
-                        if k.startswith("ampeg_"):
-                            self.adsr_histogram["{}={}".format(k,v)] += 1
-
                         self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
 
                 # TODO: finish loops
@@ -187,8 +183,7 @@ class Multisample(object):
                 pass
             else:
                 logging.warning("Unhandled section {}".format(sectionName))
-
-            #TODO handle loops? tuning? sample start/end?
+                self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
 
 
     def makexml(self):
@@ -253,14 +248,15 @@ class Multisample(object):
 
         if self.sfz_opcodes_ignored:
             logging.info("SFZ opcodes that were lost in translation:")
-            sorted_sfz_opcodes_ignored = sorted(self.sfz_opcodes_ignored.items(), key=operator.itemgetter(0))
+            sorted_sfz_opcodes_ignored = sorted(self.sfz_opcodes_ignored.items(), key=operator.itemgetter(1), reverse=True)
 
             for v in sorted_sfz_opcodes_ignored:
                 print("({})  {}".format(v[1],v[0]))
 
-        if self.adsr_histogram:
-            logging.info("Suggested sampler ADSR settings:")
-            sorted_adsr_histogram = sorted(self.adsr_histogram.items(), key=operator.itemgetter(0))
+        suggest_ahdsr = { k: v for k, v in self.sfz_opcodes_ignored.items() if k.startswith('ampeg_') }
+        if suggest_ahdsr:
+            logging.info("Suggested sampler AHDSR settings:")
+            sorted_adsr_histogram = sorted(suggest_ahdsr.items(), key=operator.itemgetter(1), reverse=True)
 
             for v in sorted_adsr_histogram:
                 print("({})  {}".format(v[1],v[0]))
