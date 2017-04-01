@@ -62,6 +62,7 @@ class Multisample(object):
     name = 'default'
     samples = []
     adsr_histogram = defaultdict(int)
+    sfz_opcodes_ignored = defaultdict(int)
 
     def __init__(self, sfz=None):
         pass
@@ -110,7 +111,7 @@ class Multisample(object):
                 opcodes.update(section[1])
 
                 newsample['track'] = 'true'
-                newsample['loopmode'] = 'off'
+                newsample['loopmode'] = 'off' #TODO make these defaults on keyerror when building xml later, redundant
                 newsample['loopstart'] = '0.000'
                 newsample['loopstop'] = '0.000'
 
@@ -152,7 +153,7 @@ class Multisample(object):
                         if k.startswith("ampeg_"):
                             self.adsr_histogram["{}={}".format(k,v)] += 1
 
-                        logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
+                        self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
 
                 # TODO: finish loops
                 defaultPath = cur_control_defaults.get('default_path',os.path.dirname(os.path.abspath(sfzfile)))
@@ -170,16 +171,18 @@ class Multisample(object):
 
             elif sectionName == "global":
                 for k, v in section[1].items():
-                    logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
+                    self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+                    #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "group":
                 for k, v in section[1].items():
-                    logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
+                    self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+                    #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "curve":
-                for k, v in section[1].items():
-                    logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
+                    self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+                    #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "effect":
-                for k, v in section[1].items():
-                    logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
+                    self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+                    #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "comment":
                 pass
             else:
@@ -247,6 +250,13 @@ class Multisample(object):
         finally:
             zf.close
             logging.info("Generated multisample {}".format(outpath))
+
+        if self.sfz_opcodes_ignored:
+            logging.info("SFZ opcodes that were lost in translation:")
+            sorted_sfz_opcodes_ignored = sorted(self.sfz_opcodes_ignored.items(), key=operator.itemgetter(0))
+
+            for v in sorted_sfz_opcodes_ignored:
+                print("({})  {}".format(v[1],v[0]))
 
         if self.adsr_histogram:
             logging.info("Suggested sampler ADSR settings:")
