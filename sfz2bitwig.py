@@ -25,6 +25,7 @@ VERSION="0.1.0" # MAJOR.MINOR.PATCH | http://semver.org
 from docopt import docopt
 from sfzparser import SFZParser
 from sfzparser import sfz_note_to_midi_key
+from collections import defaultdict
 
 import zipfile
 import wave
@@ -32,6 +33,7 @@ import re
 from io import open
 import os
 import logging
+import operator
 
 
 def main():
@@ -59,6 +61,7 @@ def main():
 class Multisample(object):
     name = 'default'
     samples = []
+    adsr_histogram = defaultdict(int)
 
     def __init__(self, sfz=None):
         pass
@@ -146,6 +149,9 @@ class Multisample(object):
                         newsample['loopstop'] = v
 
                     else:
+                        if k.startswith("ampeg_"):
+                            self.adsr_histogram["{}={}".format(k,v)] += 1
+
                         logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
 
                 # TODO: finish loops
@@ -195,7 +201,7 @@ class Multisample(object):
         xml += '   <layer name="Default">\n'
 
         for sample in self.samples:
-            xml += '      <sample file="{}" gain="{}" sample-start="{}" sample-stop="{}">\n'.format(os.path.basename(sample.get('file','')),sample.get('gain',''),sample.get('sample-start',''),sample.get('sample-stop',''))
+            xml += '      <sample file="{}" gain="{}" sample-start="{}" sample-stop="{}">\n'.format(os.path.basename(sample.get('file','')),sample.get('gain','0'),sample.get('sample-start','0.000'),sample.get('sample-stop','0.000'))
             xml += '         <key high="{}" low="{}" root="{}" track="{}" tune="{}"/>\n'.format(sample.get('keyhigh',''),sample.get('keylow',''),sample.get('root',''),sample.get('track',''),sample.get('tune',''))
             vhigh = int(sample.get('velocityhigh','127'))
             vlow = int(sample.get('velocitylow','0'))
@@ -241,6 +247,14 @@ class Multisample(object):
         finally:
             zf.close
             logging.info("Generated multisample {}".format(outpath))
+
+        if self.adsr_histogram:
+            logging.info("Suggested sampler ADSR settings:")
+            sorted_adsr_histogram = sorted(self.adsr_histogram.items(), key=operator.itemgetter(0))
+
+            for v in sorted_adsr_histogram:
+                print("({})  {}".format(v[1],v[0]))
+
 
 
     def getsamplecount(self, path):
