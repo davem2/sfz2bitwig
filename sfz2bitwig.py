@@ -21,16 +21,16 @@ Options:
 
 VERSION="0.1.0" # MAJOR.MINOR.PATCH | http://semver.org
 
-
 from docopt import docopt
+
 from sfzparser import SFZParser
 from sfzparser import sfz_note_to_midi_key
 from collections import defaultdict
+from io import open
 
 import zipfile
 import wave
 import re
-from io import open
 import os
 import logging
 import operator
@@ -200,7 +200,7 @@ class Multisample(object):
 
         for sample in self.samples:
             xml += '      <sample file="{}" gain="{}" sample-start="{}" sample-stop="{}">\n'.format(os.path.basename(sample.get('file','')),sample.get('gain','0.00'),sample.get('sample-start','0.000'),sample.get('sample-stop','0.000'))
-            xml += '         <key high="{}" low="{}" root="{}" track="{}" tune="{}"/>\n'.format(sample.get('keyhigh',''),sample.get('keylow',''),sample.get('root',''),sample.get('track',''),sample.get('tune','0.00'))
+            xml += '         <key high="{}" low="{}" root="{}" track="{}" tune="{}"/>\n'.format(sample.get('keyhigh',''),sample.get('keylow',''),sample.get('root',''),sample.get('track',''),sample.get('tune','0.0'))
             vhigh = int(sample.get('velocityhigh','127'))
             vlow = int(sample.get('velocitylow','0'))
             if vhigh == 127 and vlow == 0:
@@ -212,7 +212,7 @@ class Multisample(object):
             else:
                 xml += '         <velocity high="{}" low="{}"/>\n'.format(vhigh,vlow)
 
-            xml += '         <loop mode="{}" start="{}" stop="{}"/>\n'.format(sample.get('loopmode',''),sample.get('loopstart',''),sample.get('loopstop',''))
+            xml += '         <loop mode="{}" start="{}" stop="{}"/>\n'.format(sample.get('loopmode','off'),sample.get('loopstart','0.000'),sample.get('loopstop',sample.get('sample-stop','0.000')))
             xml += '      </sample>\n'
 
         xml += '    </layer>\n'
@@ -255,7 +255,7 @@ class Multisample(object):
 
         suggest_ahdsr = { k: v for k, v in self.sfz_opcodes_ignored.items() if k.startswith('ampeg_') }
         if suggest_ahdsr:
-            logging.info("Suggested sampler AHDSR settings:")
+            logging.info("Suggested Bitwig sampler AHDSR settings:")
             sorted_adsr_histogram = sorted(suggest_ahdsr.items(), key=operator.itemgetter(1), reverse=True)
 
             for v in sorted_adsr_histogram:
