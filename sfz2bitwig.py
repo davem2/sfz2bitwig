@@ -191,13 +191,17 @@ class Multisample(object):
             for v in sorted_sfz_opcodes_ignored:
                 print("({})  {}".format(v[1],v[0]))
 
-        suggest_ahdsr = { k: v for k, v in sfz_opcodes_ignored.items() if k.startswith('ampeg_') }
+        sfz_ahdsr_opcodes = ['ampeg_release', 'ampeg_sustain', 'ampeg_hold', 'ampeg_decay', 'ampeg_attack']
+        suggest_ahdsr = { k: v for k, v in sfz_opcodes_ignored.items() if k.split('=')[0] in sfz_ahdsr_opcodes }
         if suggest_ahdsr:
             logging.info("Suggested Bitwig sampler AHDSR settings:")
-            sorted_adsr_histogram = sorted(suggest_ahdsr.items(), key=operator.itemgetter(1), reverse=True)
+            ahdsr = self.getbestahdsr(suggest_ahdsr)
 
-            for v in sorted_adsr_histogram:
-                print("({})  {}".format(v[1],v[0]))
+            print("({})  A = {} s".format(ahdsr['attack'][1],ahdsr['attack'][0]))
+            print("({})  H = {} %".format(ahdsr['hold'][1],ahdsr['hold'][0]))
+            print("({})  D = {} s".format(ahdsr['decay'][1],ahdsr['decay'][0]))
+            print("({})  S = {} %".format(ahdsr['sustain'][1],ahdsr['sustain'][0]))
+            print("({})  R = {} s".format(ahdsr['release'][1],ahdsr['release'][0]))
 
 
 
@@ -242,8 +246,9 @@ class Multisample(object):
         if not outpath:
             outpath = "{}.multisample".format(self.name)
 
+        logging.info("Writing multisample {}".format(outpath))
+
         # Build zip containing multisample.xml and sample files
-        logging.debug("Building multisample zip container {}".format(outpath))
         zf = zipfile.ZipFile(outpath,mode='w',compression=zipfile.ZIP_DEFLATED)
         try:
             logging.debug("Adding multisample.xml")
@@ -254,7 +259,21 @@ class Multisample(object):
 
         finally:
             zf.close
-            logging.info("Generated multisample {}".format(outpath))
+            logging.info("Finished writing multisample {}".format(outpath))
+
+    def getbestahdsr(self, histogram):
+        ahdsr = { 'attack':[None,0], 'hold':[None,0], 'decay':[None,0], 'sustain':[None,0], 'release':[None,0]  }
+
+        for k, v in histogram.items():
+            settingName, settingValue = k.split('=')
+            settingName = settingName.split('_')[1]
+            confidence = v
+
+            if confidence > ahdsr[settingName][1]:
+                ahdsr[settingName][0] = settingValue
+                ahdsr[settingName][1] = confidence
+
+        return ahdsr
 
 
     def getsamplecount(self, path):
