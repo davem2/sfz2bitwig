@@ -61,7 +61,6 @@ def main():
 class Multisample(object):
     name = 'default'
     samples = []
-    sfz_opcodes_ignored = defaultdict(int)
 
     def __init__(self, sfz=None):
         pass
@@ -70,6 +69,7 @@ class Multisample(object):
         cur_global_defaults = {}
         cur_control_defaults = {}
         cur_group_defaults = {}
+        sfz_opcodes_ignored = defaultdict(int)
 
         logging.info("Converting {} to multisample".format(sfzfile))
         sfz = SFZParser(sfzfile)
@@ -144,9 +144,8 @@ class Multisample(object):
                         newsample['loopstop'] = v
 
                     else:
-                        self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+                        sfz_opcodes_ignored["{}={}".format(k,v)] += 1
 
-                # TODO: finish loops
                 defaultPath = cur_control_defaults.get('default_path',os.path.dirname(os.path.abspath(sfzfile)))
                 newsampleFullPath = os.path.join(defaultPath,newsample['file'])
                 newsample['filepath'] = newsampleFullPath
@@ -157,28 +156,49 @@ class Multisample(object):
                     logging.error("No pitch_keycenter for sample {}, root of sample will need to be manually adjusted in Bitwig".format(newsample['file']))
                     newsample['root'] = 0 # bitwig defaults to c4 when root is not given, make the issue more obvious with a more extreme value
 
-                self.samples.append(newsample)
-                logging.debug("Converted sample {}".format(newsample['file']))
+                if newsample['filepath'] not in [s['filepath'] for s in self.samples]:
+                    self.samples.append(newsample)
+                    logging.debug("Converted sample {}".format(newsample['file']))
+                else:
+                    logging.warning("Skipping duplicate sample: {} ({})".format(os.path.basename(newsample.get('file','')),newsample.get('filepath','')))
 
             elif sectionName == "global":
                 for k, v in section[1].items():
-                    self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+                    sfz_opcodes_ignored["{}={}".format(k,v)] += 1
                     #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "group":
                 for k, v in section[1].items():
-                    self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+                    sfz_opcodes_ignored["{}={}".format(k,v)] += 1
                     #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "curve":
-                    self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+                    sfz_opcodes_ignored["{}={}".format(k,v)] += 1
                     #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "effect":
-                    self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+                    sfz_opcodes_ignored["{}={}".format(k,v)] += 1
                     #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "comment":
                 pass
             else:
                 logging.warning("Unhandled section {}".format(sectionName))
-                self.sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+                sfz_opcodes_ignored["{}={}".format(k,v)] += 1
+
+        logging.info("Finished converting {} to multisample, {} samples extracted".format(sfzfile,len(self.samples)))
+
+        if sfz_opcodes_ignored:
+            logging.info("SFZ opcodes that were lost in translation:")
+            sorted_sfz_opcodes_ignored = sorted(sfz_opcodes_ignored.items(), key=operator.itemgetter(1), reverse=True)
+
+            for v in sorted_sfz_opcodes_ignored:
+                print("({})  {}".format(v[1],v[0]))
+
+        suggest_ahdsr = { k: v for k, v in sfz_opcodes_ignored.items() if k.startswith('ampeg_') }
+        if suggest_ahdsr:
+            logging.info("Suggested Bitwig sampler AHDSR settings:")
+            sorted_adsr_histogram = sorted(suggest_ahdsr.items(), key=operator.itemgetter(1), reverse=True)
+
+            for v in sorted_adsr_histogram:
+                print("({})  {}".format(v[1],v[0]))
+
 
 
     def makexml(self):
@@ -228,34 +248,13 @@ class Multisample(object):
         try:
             logging.debug("Adding multisample.xml")
             zf.writestr('multisample.xml',xml)
-            samplesWritten = []
             for sample in self.samples:
-                if sample.get('filepath','') not in samplesWritten:
-                    logging.debug("Adding sample: {} ({})".format(os.path.basename(sample.get('file','')),sample.get('filepath','')))
-                    zf.write(sample.get('filepath',''),os.path.basename(sample.get('file','')))
-                    samplesWritten.append(sample.get('filepath',''))
-                else:
-                    logging.warning("Skipping duplicate sample: {} ({})".format(os.path.basename(sample.get('file','')),sample.get('filepath','')))
+                logging.debug("Adding sample: {} ({})".format(os.path.basename(sample.get('file','')),sample.get('filepath','')))
+                zf.write(sample.get('filepath',''),os.path.basename(sample.get('file','')))
 
         finally:
             zf.close
             logging.info("Generated multisample {}".format(outpath))
-
-        if self.sfz_opcodes_ignored:
-            logging.info("SFZ opcodes that were lost in translation:")
-            sorted_sfz_opcodes_ignored = sorted(self.sfz_opcodes_ignored.items(), key=operator.itemgetter(1), reverse=True)
-
-            for v in sorted_sfz_opcodes_ignored:
-                print("({})  {}".format(v[1],v[0]))
-
-        suggest_ahdsr = { k: v for k, v in self.sfz_opcodes_ignored.items() if k.startswith('ampeg_') }
-        if suggest_ahdsr:
-            logging.info("Suggested Bitwig sampler AHDSR settings:")
-            sorted_adsr_histogram = sorted(suggest_ahdsr.items(), key=operator.itemgetter(1), reverse=True)
-
-            for v in sorted_adsr_histogram:
-                print("({})  {}".format(v[1],v[0]))
-
 
 
     def getsamplecount(self, path):
