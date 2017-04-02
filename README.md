@@ -13,9 +13,13 @@ python sf2bitwig.py file.sfz
 ## Tested SFZ files
 
 [VS Chamber Orchestra: Community Edition](https://github.com/sgossner/VSCO-2-CE)
+
 [SFZ FLukelele Sampled Ukelele: Community Edition](http://patcharena.com/sfz-flukelele-sampled-ukelele-sfz-format/)
+
 [PatchArena Free Casio CK-10 Sample Pack](http://patcharena.com/free-casio-ck-10-sample-pack/)
+
 [Warm Strings SFZ](http://patcharena.com/downloads/comment.php?dlid=1247)
+
 [Double Bass Pizz](http://patcharena.com/downloads/comment.php?dlid=1256)
 * No issues
 
@@ -28,4 +32,5 @@ python sf2bitwig.py file.sfz
 
 ## SFZ resources
 http://patcharena.com/downloads/index.php?subcat=168
+
 [unofficial sfz spec](http://drealm.info/sfz/plj-sfz.xhtml)
