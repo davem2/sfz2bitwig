@@ -109,11 +109,6 @@ class Multisample(object):
                 opcodes.update(cur_group_defaults)
                 opcodes.update(section[1])
 
-                newsample['track'] = 'true'
-                newsample['loopmode'] = 'off' #TODO make these defaults on keyerror when building xml later, redundant
-                newsample['loopstart'] = '0.000'
-                newsample['loopstop'] = '0.000'
-
                 for k, v in opcodes.items():
                     logging.debug(" {}={}".format(k,v))
                     if k == "sample":
@@ -200,7 +195,7 @@ class Multisample(object):
 
         for sample in self.samples:
             xml += '      <sample file="{}" gain="{}" sample-start="{}" sample-stop="{}">\n'.format(os.path.basename(sample.get('file','')),sample.get('gain','0.00'),sample.get('sample-start','0.000'),sample.get('sample-stop','0.000'))
-            xml += '         <key high="{}" low="{}" root="{}" track="{}" tune="{}"/>\n'.format(sample.get('keyhigh',''),sample.get('keylow',''),sample.get('root',''),sample.get('track',''),sample.get('tune','0.0'))
+            xml += '         <key high="{}" low="{}" root="{}" track="{}" tune="{}"/>\n'.format(sample.get('keyhigh',''),sample.get('keylow',''),sample.get('root',''),sample.get('track','true'),sample.get('tune','0.0'))
             vhigh = int(sample.get('velocityhigh','127'))
             vlow = int(sample.get('velocitylow','0'))
             if vhigh == 127 and vlow == 0:
