@@ -32,23 +32,12 @@ import zipfile
 import wave
 import re
 import os
-import logging
 import operator
 
 
 def main():
     # Parse command line
     args = docopt(__doc__, version="sfz2bitwig v{}".format(VERSION))
-
-    # Configure logging
-    logLevel = logging.INFO #default
-    if args['--verbose']:
-        logLevel = logging.DEBUG
-    elif args['--quiet']:
-        logLevel = logging.ERROR
-
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logLevel)
-    logging.debug(args)
 
     # Convert file
     multisamp = Multisample()
@@ -71,15 +60,15 @@ class Multisample(object):
         cur_group_defaults = {}
         sfz_opcodes_ignored = defaultdict(int)
 
-        logging.info("Converting {} to multisample".format(sfzfile))
+        print("\nConverting {} to multisample".format(sfzfile))
         sfz = SFZParser(sfzfile)
-        logging.debug("Finished parsing {}".format(sfzfile))
+        #print("Finished parsing {}".format(sfzfile))
 
         self.name = "{}".format(os.path.splitext(sfzfile)[0])
 
         for section in sfz.sections:
             sectionName = section[0]
-            logging.debug("start section <{}>".format(sectionName))
+            #print("start section <{}>".format(sectionName))
             if sectionName == "control":
                 cur_control_defaults = {}
                 for k, v in section[1].items():
@@ -87,19 +76,19 @@ class Multisample(object):
                     if k == "default_path":
                         cur_control_defaults["default_path"] = os.path.join(os.path.dirname(os.path.abspath(sfzfile)),os.path.normpath(v.replace('\\','/')))
 
-                    logging.debug("Set control default: {}={}".format(k,cur_control_defaults[k]))
+                    #print("Set control default: {}={}".format(k,cur_control_defaults[k]))
 
             elif sectionName == "group":
                 cur_group_defaults = {}
                 for k, v in section[1].items():
                     cur_group_defaults[k] = v
-                    logging.debug("Set group default: {}={}".format(k,v))
+                    #print("Set group default: {}={}".format(k,v))
 
             elif sectionName == "global":
                 cur_global_defaults = {}
                 for k, v in section[1].items():
                     cur_global_defaults[k] = v
-                    logging.debug("Set global default: {}={}".format(k,v))
+                    #print("Set global default: {}={}".format(k,v))
 
             elif sectionName == "region":
                 newsample = {}
@@ -110,7 +99,7 @@ class Multisample(object):
                 opcodes.update(section[1])
 
                 for k, v in opcodes.items():
-                    logging.debug(" {}={}".format(k,v))
+                    #print(" {}={}".format(k,v))
                     if k == "sample":
                         newsample['file'] = os.path.normpath(v.replace('\\','/'))
                         if newsample['file'][0] == '/': # relative path should not contain leading slash
@@ -153,39 +142,39 @@ class Multisample(object):
                 newsample['sample-stop'] = self.getsamplecount(newsampleFullPath)
 
                 if 'root' not in newsample and newsample['track'] == 'true':
-                    logging.error("No pitch_keycenter for sample {}, root of sample will need to be manually adjusted in Bitwig".format(newsample['file']))
+                    print("ERROR: No pitch_keycenter for sample {}, root of sample will need to be manually adjusted in Bitwig".format(newsample['file']))
                     newsample['root'] = 0 # bitwig defaults to c4 when root is not given, make the issue more obvious with a more extreme value
 
                 if newsample['filepath'] not in [s['filepath'] for s in self.samples]:
                     self.samples.append(newsample)
-                    logging.debug("Converted sample {}".format(newsample['file']))
+                    #print("Converted sample {}".format(newsample['file']))
                 else:
-                    logging.warning("Skipping duplicate sample: {} ({})".format(os.path.basename(newsample.get('file','')),newsample.get('filepath','')))
+                    print("WARNING: Skipping duplicate sample: {} ({})".format(os.path.basename(newsample.get('file','')),newsample.get('filepath','')))
 
             elif sectionName == "global":
                 for k, v in section[1].items():
                     sfz_opcodes_ignored["{}={}".format(k,v)] += 1
-                    #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
+                    #print("WARNING: Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "group":
                 for k, v in section[1].items():
                     sfz_opcodes_ignored["{}={}".format(k,v)] += 1
-                    #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
+                    #print("WARNING: Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "curve":
                     sfz_opcodes_ignored["{}={}".format(k,v)] += 1
-                    #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
+                    #print("WARNING: Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "effect":
                     sfz_opcodes_ignored["{}={}".format(k,v)] += 1
-                    #logging.warning("Ignoring SFZ opcode {}={}".format(k,v))
+                    #print("WARNING: Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "comment":
                 pass
             else:
-                logging.warning("Unhandled section {}".format(sectionName))
+                print("WARNING: Unhandled section {}".format(sectionName))
                 sfz_opcodes_ignored["{}={}".format(k,v)] += 1
 
-        logging.info("Finished converting {} to multisample, {} samples extracted".format(sfzfile,len(self.samples)))
+        print("Finished converting {} to multisample, {} samples extracted".format(sfzfile,len(self.samples)))
 
         if sfz_opcodes_ignored:
-            logging.info("SFZ opcodes that were lost in translation:")
+            print("\nSFZ opcodes that were lost in translation:")
             sorted_sfz_opcodes_ignored = sorted(sfz_opcodes_ignored.items(), key=operator.itemgetter(1), reverse=True)
 
             for v in sorted_sfz_opcodes_ignored:
@@ -194,7 +183,7 @@ class Multisample(object):
         sfz_ahdsr_opcodes = ['ampeg_release', 'ampeg_sustain', 'ampeg_hold', 'ampeg_decay', 'ampeg_attack']
         suggest_ahdsr = { k: v for k, v in sfz_opcodes_ignored.items() if k.split('=')[0] in sfz_ahdsr_opcodes }
         if suggest_ahdsr:
-            logging.info("Suggested Bitwig sampler AHDSR settings:")
+            print("\nSuggested Bitwig sampler AHDSR settings:")
             ahdsr = self.getbestahdsr(suggest_ahdsr)
 
             print("({})  A = {} s".format(ahdsr['attack'][1],ahdsr['attack'][0]))
@@ -246,20 +235,20 @@ class Multisample(object):
         if not outpath:
             outpath = "{}.multisample".format(self.name)
 
-        logging.info("Writing multisample {}".format(outpath))
+        print("\nWriting multisample {}".format(outpath))
 
         # Build zip containing multisample.xml and sample files
         zf = zipfile.ZipFile(outpath,mode='w',compression=zipfile.ZIP_DEFLATED)
         try:
-            logging.debug("Adding multisample.xml")
+            #print("Adding multisample.xml")
             zf.writestr('multisample.xml',xml)
             for sample in self.samples:
-                logging.debug("Adding sample: {} ({})".format(os.path.basename(sample.get('file','')),sample.get('filepath','')))
+                #print("Adding sample: {} ({})".format(os.path.basename(sample.get('file','')),sample.get('filepath','')))
                 zf.write(sample.get('filepath',''),os.path.basename(sample.get('file','')))
 
         finally:
             zf.close
-            logging.info("Finished writing multisample {}".format(outpath))
+            print("Finished writing multisample {}".format(outpath))
 
     def getbestahdsr(self, histogram):
         ahdsr = { 'attack':[None,0], 'hold':[None,0], 'decay':[None,0], 'sustain':[None,0], 'release':[None,0]  }
