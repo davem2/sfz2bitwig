@@ -6,10 +6,12 @@ The Bitwig multisample format is more basic than sfz. Features that are unique t
 
 ## Usage
 python sf2bitwig.py file.sfz
+
 python sf2bitwig.py file.sfz file2.sfz ...
 
 ## Tested SFZ files
 
+### No issues
 [VS Chamber Orchestra: Community Edition](https://github.com/sgossner/VSCO-2-CE)
 
 [SFZ FLukelele Sampled Ukelele: Community Edition](http://patcharena.com/sfz-flukelele-sampled-ukelele-sfz-format/)
@@ -19,8 +21,9 @@ python sf2bitwig.py file.sfz file2.sfz ...
 [Warm Strings SFZ](http://patcharena.com/downloads/comment.php?dlid=1247)
 
 [Double Bass Pizz](http://patcharena.com/downloads/comment.php?dlid=1256)
-* No issues
 
+
+### Have issues
 [Sonatina Symphonic Orchestra](http://sso.mattiaswestlund.net/download.html)
 * Some .sfz cause issues on case sensitive file systems (easy to fix by hand)
 * Some .sfz have regions with missing pitch_keycenter opcode (causes region to play out of tune, can be fixed by hand)
