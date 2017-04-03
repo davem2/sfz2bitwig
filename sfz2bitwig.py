@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-VERSION="0.2.0" # MAJOR.MINOR.PATCH | http://semver.org
+VERSION="0.2.1" # MAJOR.MINOR.PATCH | http://semver.org
 
-from sfzparser import SFZParser
-from sfzparser import sfz_note_to_midi_key
 from collections import defaultdict
+from collections import OrderedDict
 from io import open
 
 import zipfile
 import wave
+import math
 import re
 import os
 import operator
@@ -83,15 +83,15 @@ class Multisample(object):
                         if newsample['file'][0] == '/': # relative path should not contain leading slash
                             newsample['file'] = newsample['file'][1:]
                     elif k == "lokey":
-                        newsample['keylow'] = sfz_note_to_midi_key(v)
+                        newsample['keylow'] = self.sfz_note_to_midi_key(v)
                     elif k == "hikey":
-                        newsample['keyhigh'] = sfz_note_to_midi_key(v)
+                        newsample['keyhigh'] = self.sfz_note_to_midi_key(v)
                     elif k == "pitch_keycenter":
-                        newsample['root'] = sfz_note_to_midi_key(v)
+                        newsample['root'] = self.sfz_note_to_midi_key(v)
                     elif k == "key":
-                        newsample['keylow'] = sfz_note_to_midi_key(v)
-                        newsample['keyhigh'] = sfz_note_to_midi_key(v)
-                        newsample['root'] = sfz_note_to_midi_key(v)
+                        newsample['keylow'] = self.sfz_note_to_midi_key(v)
+                        newsample['keyhigh'] = self.sfz_note_to_midi_key(v)
+                        newsample['root'] = self.sfz_note_to_midi_key(v)
                     elif k == "pitch_keytrack":
                         newsample['track'] = v
                     elif k == "lovel":
@@ -242,12 +242,82 @@ class Multisample(object):
 
         return ahdsr
 
-
     def getsamplecount(self, path):
         ifile = wave.open(path)
         sampcount = ifile.getnframes()
 
         return sampcount
+
+    def sfz_note_to_midi_key(self, sfz_note):
+        SFZ_NOTE_LETTER_OFFSET = {'a': 9, 'b': 11, 'c': 0, 'd': 2, 'e': 4, 'f': 5, 'g': 7}
+        letter = sfz_note[0].lower()
+        if letter not in SFZ_NOTE_LETTER_OFFSET.keys():
+            return sfz_note
+
+        sharp = '#' in sfz_note
+        octave = int(sfz_note[-1])
+
+        # Notes in bitwig multisample are an octave off (i.e. c4=60, not c3=60)
+        return SFZ_NOTE_LETTER_OFFSET[letter] + ((octave + 2) * 12) + (1 if sharp else 0)
+
+
+#SFZParser code taken from https://github.com/SpotlightKid/sfzparser/blob/master/sfzparser.py
+class SFZParser(object):
+    rx_section = re.compile('^<([^>]+)>\s?')
+
+    def __init__(self, sfz_path, encoding=None, **kwargs):
+        self.encoding = encoding
+        self.sfz_path = sfz_path
+        self.groups = []
+        self.sections = []
+
+        with open(sfz_path, encoding=self.encoding or 'utf-8-sig') as sfz:
+            self.parse(sfz)
+
+    def parse(self, sfz):
+        sections = self.sections
+        cur_section = []
+        value = None
+
+        for line in sfz:
+            line = line.strip()
+
+            if not line:
+                continue
+
+            if line.startswith('//'):
+                sections.append(('comment', line))
+                continue
+
+            while line:
+                match = self.rx_section.search(line)
+                if match:
+                    if cur_section:
+                        sections.append((section_name, OrderedDict(reversed(cur_section))))
+                        cur_section = []
+
+                    section_name = match.group(1).strip()
+                    line = line[match.end():].lstrip()
+                elif "=" in line:
+                    line, _, value = line.rpartition('=')
+                    if '=' in line:
+                        line, key = line.rsplit(None, 1)
+                        cur_section.append((key, value))
+                        value = None
+                elif value:
+                    line, key = None, line
+                    cur_section.append((key, value))
+                else:
+                    if line.startswith('//'):
+                        print("Warning: inline comment")
+                        sections.append(('comment', line))
+                    # ignore garbage
+                    break
+
+        if cur_section:
+            sections.append((section_name, OrderedDict(reversed(cur_section))))
+
+        return sections
 
 
 if __name__ == "__main__":
