@@ -1,27 +1,6 @@
 #!/usr/bin/env python3
 
-"""sfz2bitwig
-
-Usage:
-  sfz2bitwig [options] <sfzfile>
-  sfz2bitwig -h | --help
-  sfz2bitwig ---version
-
-Convert an sfz instrument into a Bitwig multisample instrument.
-
-Examples:
-  sfz2bitwig instrument.sfz
-
-Options:
-  -q, --quiet           Print less text.
-  -v, --verbose         Print more text.
-  -h, --help            Show help.
-  --version             Show version.
-"""
-
 VERSION="0.1.0" # MAJOR.MINOR.PATCH | http://semver.org
-
-from docopt import docopt
 
 from sfzparser import SFZParser
 from sfzparser import sfz_note_to_midi_key
@@ -35,14 +14,13 @@ import os
 import operator
 
 
-def main():
+def main(args=None):
     # Parse command line
-    args = docopt(__doc__, version="sfz2bitwig v{}".format(VERSION))
-
-    # Convert file
-    multisamp = Multisample()
-    multisamp.initFromSFZ(args['<sfzfile>'])
-    multisamp.write()
+    for fn in args:
+        # Convert file
+        multisamp = Multisample()
+        multisamp.initFromSFZ(fn)
+        multisamp.write()
 
     return
 
@@ -273,4 +251,5 @@ class Multisample(object):
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    sys.exit(main(sys.argv[1:] or None))

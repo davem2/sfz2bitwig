@@ -6,9 +6,7 @@ The Bitwig multisample format is more basic than sfz. Features that are unique t
 
 ## Usage
 python sf2bitwig.py file.sfz
-
-## Dependencies
-* docopt
+python sf2bitwig.py file.sfz file2.sfz ...
 
 ## Tested SFZ files
 
