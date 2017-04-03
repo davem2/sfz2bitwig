@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-VERSION="0.1.0" # MAJOR.MINOR.PATCH | http://semver.org
+VERSION="0.2.0" # MAJOR.MINOR.PATCH | http://semver.org
 
 from sfzparser import SFZParser
 from sfzparser import sfz_note_to_midi_key
