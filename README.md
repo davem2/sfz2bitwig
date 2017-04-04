@@ -22,6 +22,11 @@ python sf2bitwig.py file.sfz file2.sfz ...
 
 [Double Bass Pizz](http://patcharena.com/downloads/comment.php?dlid=1256)
 
+[City Piano](http://bigcatinstruments.blogspot.com/2015/09/all-keyboard-instruments.html)
+
+[Iowa Piano](http://bigcatinstruments.blogspot.com/2015/09/all-keyboard-instruments.html)
+
+
 
 ### Have issues
 [Sonatina Symphonic Orchestra](http://sso.mattiaswestlund.net/download.html)

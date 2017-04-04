@@ -119,7 +119,7 @@ class Multisample(object):
                 newsample['sample-start'] = '0.000'
                 newsample['sample-stop'] = self.getsamplecount(newsampleFullPath)
 
-                if 'root' not in newsample and newsample['track'] == 'true':
+                if 'root' not in newsample and newsample.get('track','true') == 'true':
                     print("ERROR: No pitch_keycenter for sample {}, root of sample will need to be manually adjusted in Bitwig".format(newsample['file']))
                     newsample['root'] = 0 # bitwig defaults to c4 when root is not given, make the issue more obvious with a more extreme value
 
