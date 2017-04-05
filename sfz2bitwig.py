@@ -26,10 +26,9 @@ def main(args=None):
 
 
 class Multisample(object):
-    name = 'default'
-    samples = []
-
     def __init__(self, sfz=None):
+        self.name = 'default'
+        self.samples = []
         pass
 
     def initFromSFZ(self, sfzfile):
