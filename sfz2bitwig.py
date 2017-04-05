@@ -129,14 +129,6 @@ class Multisample(object):
                 else:
                     print("WARNING: Skipping duplicate sample: {} ({})".format(os.path.basename(newsample.get('file','')),newsample.get('filepath','')))
 
-            elif sectionName == "global":
-                for k, v in section[1].items():
-                    sfz_opcodes_ignored["{}={}".format(k,v)] += 1
-                    #print("WARNING: Ignoring SFZ opcode {}={}".format(k,v))
-            elif sectionName == "group":
-                for k, v in section[1].items():
-                    sfz_opcodes_ignored["{}={}".format(k,v)] += 1
-                    #print("WARNING: Ignoring SFZ opcode {}={}".format(k,v))
             elif sectionName == "curve":
                     sfz_opcodes_ignored["{}={}".format(k,v)] += 1
                     #print("WARNING: Ignoring SFZ opcode {}={}".format(k,v))
