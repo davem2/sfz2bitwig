@@ -109,7 +109,8 @@ class Multisample(object):
                         newsample['loopstart'] = v
                     elif k == "loop_end":
                         newsample['loopstop'] = v
-
+                    elif k == "trigger":
+                        newsample['trigger'] = v
                     else:
                         sfz_opcodes_ignored["{}={}".format(k,v)] += 1
 
@@ -123,11 +124,16 @@ class Multisample(object):
                     print("ERROR: No pitch_keycenter for sample {}, root of sample will need to be manually adjusted in Bitwig".format(newsample['file']))
                     newsample['root'] = 0 # bitwig defaults to c4 when root is not given, make the issue more obvious with a more extreme value
 
-                if newsample['filepath'] not in [s['filepath'] for s in self.samples]:
+                if newsample['filepath'] in [s['filepath'] for s in self.samples]:
+                    print("WARNING: Skipping duplicate sample: {} ({})".format(os.path.basename(newsample.get('file','')),newsample.get('filepath','')))
+
+                elif 'trigger' in newsample:
+                    # bitwig multisample only supports note-on events
+                    print("WARNING: Skipping sample with unhandled trigger event: trigger={}".format(newsample['trigger']))
+
+                else:
                     self.samples.append(newsample)
                     #print("Converted sample {}".format(newsample['file']))
-                else:
-                    print("WARNING: Skipping duplicate sample: {} ({})".format(os.path.basename(newsample.get('file','')),newsample.get('filepath','')))
 
             elif sectionName == "curve":
                     sfz_opcodes_ignored["{}={}".format(k,v)] += 1
