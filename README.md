@@ -26,6 +26,7 @@ python sf2bitwig.py file.sfz file2.sfz ...
 
 [Iowa Piano](http://bigcatinstruments.blogspot.com/2015/09/all-keyboard-instruments.html)
 
+[Open Source Drum Kit Project](http://download.linuxaudio.org/musical-instrument-libraries/sfz/the_open_source_drumkit.tar.7z)
 
 
 ### Have issues
