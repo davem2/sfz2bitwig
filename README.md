@@ -33,6 +33,7 @@ python sf2bitwig.py file.sfz file2.sfz ...
 [Sonatina Symphonic Orchestra](http://sso.mattiaswestlund.net/download.html)
 * Some .sfz cause issues on case sensitive file systems (easy to fix by hand)
 * Some .sfz have regions with missing pitch_keycenter opcode (causes region to play out of tune, can be fixed by hand)
+* A version with the above corrections made can be found [here](https://github.com/davem2/sso), also check out [this version with loop points added](https://github.com/peastman/sso)
 
 [PatchArena Marimba: Community Edition](http://patcharena.com/free-marimba-samples-patcharena-marimba-in-sfz-format/)
 * Resulting multisample does not load
