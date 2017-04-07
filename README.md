@@ -10,8 +10,8 @@ python sf2bitwig.py file.sfz
 python sf2bitwig.py file.sfz file2.sfz ...
 
 ## Thanks
-*[SpotlightKid](https://github.com/SpotlightKid) for [sfzparser code](https://github.com/SpotlightKid/sfzparser)
-*[Joseph Basquin](https://github.com/josephernest), for [wav loop point extraction code](https://gist.github.com/josephernest/3f22c5ed5dabf1815f16efa8fa53d476)
+* [SpotlightKid](https://github.com/SpotlightKid) for [sfzparser code](https://github.com/SpotlightKid/sfzparser)
+* [Joseph Basquin](https://github.com/josephernest), for [wav loop point extraction code](https://gist.github.com/josephernest/3f22c5ed5dabf1815f16efa8fa53d476)
 
 ## Tested SFZ files
 
