@@ -37,6 +37,7 @@ class Multisample(object):
         cur_control_defaults = {}
         cur_group_defaults = {}
         sfz_opcodes_ignored = defaultdict(int)
+        region_count = 0
 
         print("\nConverting {} to multisample".format(sfzfile))
         sfz = SFZParser(sfzfile)
@@ -69,6 +70,7 @@ class Multisample(object):
                     #print("Set global default: {}={}".format(k,v))
 
             elif sectionName == "region":
+                region_count += 1
                 newsample = {}
 
                 # Apply settings with priority global < group < region
@@ -156,26 +158,36 @@ class Multisample(object):
                 print("WARNING: Unhandled section {}".format(sectionName))
                 sfz_opcodes_ignored["{}={}".format(k,v)] += 1
 
-        print("Finished converting {} to multisample, {} samples extracted".format(sfzfile,len(self.samples)))
+        print("Finished converting {} to multisample".format(sfzfile))
+        print("\nConversion Results:")
+        print("  {} samples mapped from {} regions".format(len(self.samples),region_count))
 
         if sfz_opcodes_ignored:
-            print("\nSFZ opcodes that were lost in translation:")
+            sfz_opcodes_ignored_count = 0
+            for k, v in sfz_opcodes_ignored.items():
+                sfz_opcodes_ignored_count += v
+
+            print("\n  {} SFZ opcodes were lost in translation:".format(sfz_opcodes_ignored_count))
             sorted_sfz_opcodes_ignored = sorted(sfz_opcodes_ignored.items(), key=operator.itemgetter(1), reverse=True)
 
             for v in sorted_sfz_opcodes_ignored:
-                print("({})  {}".format(v[1],v[0]))
+                print("    ({})  {}".format(v[1],v[0]))
 
         sfz_ahdsr_opcodes = ['ampeg_release', 'ampeg_sustain', 'ampeg_hold', 'ampeg_decay', 'ampeg_attack']
         suggest_ahdsr = { k: v for k, v in sfz_opcodes_ignored.items() if k.split('=')[0] in sfz_ahdsr_opcodes }
         if suggest_ahdsr:
-            print("\nSuggested Bitwig sampler AHDSR settings:")
+            print("\n  Suggested Bitwig sampler AHDSR settings:")
             ahdsr = self.getbestahdsr(suggest_ahdsr)
-
-            print("({})  A = {} s".format(ahdsr['attack'][1],ahdsr['attack'][0]))
-            print("({})  H = {} %".format(ahdsr['hold'][1],ahdsr['hold'][0]))
-            print("({})  D = {} s".format(ahdsr['decay'][1],ahdsr['decay'][0]))
-            print("({})  S = {} %".format(ahdsr['sustain'][1],ahdsr['sustain'][0]))
-            print("({})  R = {} s".format(ahdsr['release'][1],ahdsr['release'][0]))
+            if ahdsr['attack'][0]:
+                print("    ({})  A = {} s".format(ahdsr['attack'][1],ahdsr['attack'][0]))
+            if ahdsr['hold'][0]:
+                print("    ({})  H = {} %".format(ahdsr['hold'][1],ahdsr['hold'][0]))
+            if ahdsr['decay'][0]:
+                print("    ({})  D = {} s".format(ahdsr['decay'][1],ahdsr['decay'][0]))
+            if ahdsr['sustain'][0]:
+                print("    ({})  S = {} %".format(ahdsr['sustain'][1],ahdsr['sustain'][0]))
+            if ahdsr['release'][0]:
+                print("    ({})  R = {} s".format(ahdsr['release'][1],ahdsr['release'][0]))
 
 
 
