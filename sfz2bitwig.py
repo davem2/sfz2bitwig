@@ -12,6 +12,7 @@ import math
 import re
 import os
 import operator
+import struct
 
 
 def main(args=None):
@@ -118,6 +119,15 @@ class Multisample(object):
                 newsample['filepath'] = newsampleFullPath
                 newsample['sample-start'] = '0.000'
                 newsample['sample-stop'] = self.getsamplecount(newsampleFullPath)
+
+                # Check for loop points embedded in wav file, and specify them in multisample xml as bitwig wont load them from wav automatically
+                if not newsample.get('loopstart',None) and not newsample.get('loopstop',None):
+                    metadata = self.readwavmetadata(newsampleFullPath,readloops=True)
+                    if metadata[0] and metadata[0][0]:
+                        newsample['loopmode'] = 'sustain'
+                        newsample['loopstart'] = metadata[0][0][0]
+                        newsample['loopstop'] = metadata[0][0][1]
+                        print("Extracted loop point ({},{}) from {}".format(newsample['loopstart'],newsample['loopstop'],newsample['file']))
 
                 if 'root' not in newsample and newsample.get('track','true') == 'true':
                     print("ERROR: No pitch_keycenter for sample {}, root of sample will need to be manually adjusted in Bitwig".format(newsample['file']))
@@ -244,6 +254,83 @@ class Multisample(object):
         sampcount = ifile.getnframes()
 
         return sampcount
+
+    # based on https://gist.github.com/josephernest/3f22c5ed5dabf1815f16efa8fa53d476
+    def readwavmetadata(self, file, readmarkers=False, readmarkerlabels=False, readmarkerslist=False, readloops=False, readpitch=False):
+        if hasattr(file,'read'):
+            fid = file
+        else:
+            fid = open(file, 'rb')
+
+        def _read_riff_chunk(fid):
+            str1 = fid.read(4)
+            if str1 != b'RIFF':
+                raise ValueError("Not a WAV file.")
+            fsize = struct.unpack('<I', fid.read(4))[0] + 8
+            str2 = fid.read(4)
+            if (str2 != b'WAVE'):
+                raise ValueError("Not a WAV file.")
+            return fsize
+        fsize = _read_riff_chunk(fid)
+
+        noc = 1
+        bits = 8
+        #_cue = []
+        #_cuelabels = []
+        _markersdict = defaultdict(lambda: {'position': -1, 'label': ''})
+        loops = []
+        pitch = 0.0
+        while (fid.tell() < fsize):
+            # read the next chunk
+            chunk_id = fid.read(4)
+            if chunk_id == b'fmt ':
+                pass
+            elif chunk_id == b'data':
+                pass
+            elif chunk_id == b'cue ':
+                str1 = fid.read(8)
+                size, numcue = struct.unpack('<ii',str1)
+                for c in range(numcue):
+                    str1 = fid.read(24)
+                    id, position, datachunkid, chunkstart, blockstart, sampleoffset = struct.unpack('<iiiiii', str1)
+                    #_cue.append(position)
+                    _markersdict[id]['position'] = position                    # needed to match labels and markers
+
+            elif chunk_id == b'LIST':
+                str1 = fid.read(8)
+                size, type = struct.unpack('<ii', str1)
+            elif chunk_id in [b'ICRD', b'IENG', b'ISFT', b'ISTJ']:    # see http://www.pjb.com.au/midi/sfspec21.html#i5
+                pass
+            elif chunk_id == b'labl':
+                str1 = fid.read(8)
+                size, id = struct.unpack('<ii',str1)
+                size = size + (size % 2)                              # the size should be even, see WAV specfication, e.g. 16=>16, 23=>24
+                label = fid.read(size-4).rstrip('\x00')               # remove the trailing null characters
+                #_cuelabels.append(label)
+                _markersdict[id]['label'] = label                           # needed to match labels and markers
+
+            elif chunk_id == b'smpl':
+                str1 = fid.read(40)
+                size, manuf, prod, sampleperiod, midiunitynote, midipitchfraction, smptefmt, smpteoffs, numsampleloops, samplerdata = struct.unpack('<iiiiiIiiii', str1)
+                cents = midipitchfraction * 1./(2**32-1)
+                pitch = 440. * 2 ** ((midiunitynote + cents - 69.)/12)
+                for i in range(numsampleloops):
+                    str1 = fid.read(24)
+                    cuepointid, type, start, end, fraction, playcount = struct.unpack('<iiiiii', str1)
+                    loops.append([start, end])
+            else:
+                pass
+        fid.close()
+
+        _markerslist = sorted([_markersdict[l] for l in _markersdict], key=lambda k: k['position'])  # sort by position
+        _cue = [m['position'] for m in _markerslist]
+        _cuelabels = [m['label'] for m in _markerslist]
+
+        return ((_cue,) if readmarkers else ()) \
+            + ((_cuelabels,) if readmarkerlabels else ()) \
+            + ((_markerslist,) if readmarkerslist else ()) \
+            + ((loops,) if readloops else ()) \
+            + ((pitch,) if readpitch else ())
 
     def sfz_note_to_midi_key(self, sfz_note):
         SFZ_NOTE_LETTER_OFFSET = {'a': 9, 'b': 11, 'c': 0, 'd': 2, 'e': 4, 'f': 5, 'g': 7}
