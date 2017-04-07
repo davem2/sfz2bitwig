@@ -9,6 +9,10 @@ python sf2bitwig.py file.sfz
 
 python sf2bitwig.py file.sfz file2.sfz ...
 
+## Thanks
+*[SpotlightKid](https://github.com/SpotlightKid) for [sfzparser code](https://github.com/SpotlightKid/sfzparser)
+*[Joseph Basquin](https://github.com/josephernest), for [wav loop point extraction code](https://gist.github.com/josephernest/3f22c5ed5dabf1815f16efa8fa53d476)
+
 ## Tested SFZ files
 
 ### No issues
@@ -36,7 +40,7 @@ python sf2bitwig.py file.sfz file2.sfz ...
 * A version with the above corrections made can be found [here](https://github.com/davem2/sso), also check out [this version with loop points added](https://github.com/peastman/sso)
 
 [PatchArena Marimba: Community Edition](http://patcharena.com/free-marimba-samples-patcharena-marimba-in-sfz-format/)
-* Resulting multisample does not load
+* Resulting multisample does not load (something strange about PatchArena_marimba-036-c#1.wav)
 
 ## SFZ resources
 http://patcharena.com/downloads/index.php?subcat=168
