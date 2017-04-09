@@ -11,13 +11,29 @@ import wave
 import math
 import re
 import os
+import sys
 import operator
 import struct
+import argparse
 
 
-def main(args=None):
-    # Parse command line
-    for fn in args:
+def parse_commandline():
+    parser = argparse.ArgumentParser(description='Convert an sfz instrument into a Bitwig multisample instrument.')
+    parser.add_argument('-v', '--version', action='version', version='sfz2bitwig v{0}'.format(VERSION))
+    parser.add_argument('files', nargs='*')
+
+    # Show help if no arguments given
+    if len(sys.argv[1:]) == 0:
+        parser.print_help()
+        parser.exit()
+
+    return parser.parse_args()
+
+
+def main():
+    args = parse_commandline()
+
+    for fn in args.files:
         # Convert file
         multisamp = Multisample()
         multisamp.initFromSFZ(fn)
@@ -417,5 +433,4 @@ class SFZParser(object):
 
 
 if __name__ == "__main__":
-    import sys
-    sys.exit(main(sys.argv[1:] or None))
+    main()
