@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-VERSION="0.4.0" # MAJOR.MINOR.PATCH | http://semver.org
+VERSION="0.5.0" # MAJOR.MINOR.PATCH | http://semver.org
 
 from collections import defaultdict
 from collections import OrderedDict
