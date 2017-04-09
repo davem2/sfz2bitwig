@@ -17,8 +17,14 @@ python sfz2bitwig.py file.sfz file2.sfz ...
 
 Metadata of the created multisample can be set through commandline arguments:
 ```shell
-python sfz2bitwig.py --category Synth --creator bob --description 'multisample description' --keywords Noisy Dark file.sfz file2.sfz ...
+python sfz2bitwig.py --category Strings --creator bob --keywords acoustic warm orchestral --description 'multisample description' file.sfz file2.sfz ...
 ```
+
+By default, sfz2bitwig will scan for and extract embedded loop points from wav samples. To disable this (faster conversions) use the --noloop option.
+```shell
+python sfz2bitwig.py --noloop file.sfz
+```
+
 
 ## Thanks
 * [SpotlightKid](https://github.com/SpotlightKid) for [sfzparser code](https://github.com/SpotlightKid/sfzparser)
