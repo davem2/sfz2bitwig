@@ -18,14 +18,14 @@ import argparse
 
 
 def parse_commandline():
-    parser = argparse.ArgumentParser(description='Convert an sfz instrument into a Bitwig multisample instrument.')
-    parser.add_argument('-v', '--version', action='version', version='sfz2bitwig v{0}'.format(VERSION))
-    parser.add_argument('files', nargs='*')
-
-    # Show help if no arguments given
-    if len(sys.argv[1:]) == 0:
-        parser.print_help()
-        parser.exit()
+    parser = argparse.ArgumentParser(prog='sfz2bitwig', description='Convert an sfz instrument into a Bitwig multisample instrument.')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s v{0}'.format(VERSION))
+    parser.add_argument('--noloop', default=False, action='store_true', help='disable wav loop point extraction')
+    parser.add_argument('--category', default='', help='set category field of generated multisample')
+    parser.add_argument('--creator', default='sfz2bitwig', help='set creator field of generated multisample')
+    parser.add_argument('--description', default='', help='set description field of generated multisample')
+    parser.add_argument('--keywords', default='', nargs='*', help='set keywords field of generated multisample')
+    parser.add_argument('sfzfile', nargs='+', help='sfz file(s) to convert')
 
     return parser.parse_args()
 
@@ -33,22 +33,26 @@ def parse_commandline():
 def main():
     args = parse_commandline()
 
-    for fn in args.files:
+    for fn in args.sfzfile:
         # Convert file
-        multisamp = Multisample()
-        multisamp.initFromSFZ(fn)
+        multisamp = Multisample(category=args.category, creator=args.creator, description=args.description, keywords=args.keywords )
+        multisamp.initFromSFZ(fn,args.noloop)
         multisamp.write()
 
     return
 
 
 class Multisample(object):
-    def __init__(self, sfz=None):
-        self.name = 'default'
+    def __init__(self, name='default', category='', creator='', description='', keywords=None ):
+        self.name = name
+        self.category = category
+        self.creator = creator
+        self.description = description
+        self.keywords = keywords
         self.samples = []
         pass
 
-    def initFromSFZ(self, sfzfile):
+    def initFromSFZ(self, sfzfile, noloop=False):
         cur_global_defaults = {}
         cur_control_defaults = {}
         cur_group_defaults = {}
@@ -138,14 +142,15 @@ class Multisample(object):
                 newsample['sample-start'] = '0.000'
                 newsample['sample-stop'] = self.getsamplecount(newsampleFullPath)
 
-                # Check for loop points embedded in wav file, and specify them in multisample xml as bitwig wont load them from wav automatically
-                if not newsample.get('loopstart',None) and not newsample.get('loopstop',None):
-                    metadata = self.readwavmetadata(newsampleFullPath,readloops=True)
-                    if metadata[0] and metadata[0][0]:
-                        newsample['loopmode'] = 'sustain'
-                        newsample['loopstart'] = metadata[0][0][0]
-                        newsample['loopstop'] = metadata[0][0][1]
-                        print("Extracted loop point ({},{}) from {}".format(newsample['loopstart'],newsample['loopstop'],newsample['file']))
+                if not noloop:
+                    # Check for loop points embedded in wav file, and specify them in multisample xml as bitwig wont load them from wav automatically
+                    if not newsample.get('loopstart',None) and not newsample.get('loopstop',None):
+                        metadata = self.readwavmetadata(newsampleFullPath,readloops=True)
+                        if metadata[0] and metadata[0][0]:
+                            newsample['loopmode'] = 'sustain'
+                            newsample['loopstart'] = metadata[0][0][0]
+                            newsample['loopstop'] = metadata[0][0][1]
+                            print("Extracted loop point ({},{}) from {}".format(newsample['loopstart'],newsample['loopstop'],newsample['file']))
 
                 if 'root' not in newsample and newsample.get('track','true') == 'true':
                     print("ERROR: No pitch_keycenter for sample {}, root of sample will need to be manually adjusted in Bitwig".format(newsample['file']))
@@ -209,14 +214,32 @@ class Multisample(object):
 
     def makexml(self):
         xml = ''
-
         xml += '<?xml version="1.0" encoding="UTF-8"?>\n'
         xml += '<multisample name="{}">\n'.format(self.name)
         xml += '   <generator>Bitwig Studio</generator>\n'
-        xml += '   <category/>\n'
-        xml += '   <creator>sfz2bitwig</creator>\n'
-        xml += '   <description/>\n'
-        xml += '   <keywords/>\n'
+
+        if self.category:
+            xml += '   <category>{}</category>\n'.format(self.category)
+        else:
+            xml += '   <category/>\n'
+        if self.creator:
+            xml += '   <creator>{}</creator>\n'.format(self.creator)
+        else:
+            xml += '   <creator/>\n'
+        if self.description:
+            xml += '   <description>{}</description>\n'.format(self.description)
+        else:
+            xml += '   <description/>\n'
+
+        if self.keywords:
+            xml += '   <keywords>\n'
+            for keyword in self.keywords:
+                xml += '      <keyword>{}</keyword>\n'.format(keyword)
+            xml += '   </keywords>\n'
+        else:
+            xml += '   <keywords/>\n'
+
+
         xml += '   <layer name="Default">\n'
 
         for sample in self.samples:
