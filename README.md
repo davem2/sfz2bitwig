@@ -1,13 +1,24 @@
-# sf2bitwig
+# sfz2bitwig
 
 Converts sfz instruments into Bitwig Studio multisample instruments.
 
 The Bitwig multisample format is more basic than sfz. Features that are unique to sfz will be lost in the conversion process.
 
 ## Usage
-python sf2bitwig.py file.sfz
+Simple usage, convert file.sfz into file.multisample:
+```shell
+python sfz2bitwig.py file.sfz
+```
 
-python sf2bitwig.py file.sfz file2.sfz ...
+Multiple files can be converted at once:
+```shell
+python sfz2bitwig.py file.sfz file2.sfz ...
+```
+
+Metadata of the created multisample can be set through commandline arguments:
+```shell
+python sfz2bitwig.py --category Synth --creator bob --description 'multisample description' --keywords Noisy Dark file.sfz file2.sfz ...
+```
 
 ## Thanks
 * [SpotlightKid](https://github.com/SpotlightKid) for [sfzparser code](https://github.com/SpotlightKid/sfzparser)
