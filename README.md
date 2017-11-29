@@ -13,11 +13,12 @@ python sfz2bitwig.py file.sfz
 Multiple files can be converted at once:
 ```shell
 python sfz2bitwig.py file.sfz file2.sfz ...
+python sfz2bitwig.py *.sfz
 ```
 
 Metadata of the created multisample can be set through commandline arguments:
 ```shell
-python sfz2bitwig.py --category Strings --creator bob --keywords acoustic warm orchestral --description 'multisample description' file.sfz file2.sfz ...
+python sfz2bitwig.py --category Strings --creator bob --keywords acoustic warm orchestral --description 'multisample description' *.sfz
 ```
 
 By default, sfz2bitwig will scan for and extract embedded loop points from wav samples. To disable this (faster conversions) use the --noloop option.
