@@ -133,6 +133,15 @@ class Multisample(object):
                         newsample['loopstop'] = v
                     elif k == "trigger":
                         newsample['trigger'] = v
+                    elif k == "lorand":
+                        if float(v) > 0.0:
+                            newsample['playlogic'] = "conditional"
+                    elif k == "hirand":
+                        if float(v) < 1.0:
+                            newsample['playlogic'] = "conditional"
+                    elif k == "seq_length":
+                        if int(v) > 1:
+                            newsample['playlogic'] = "conditional"
                     else:
                         sfz_opcodes_ignored["{}={}".format(k,v)] += 1
 
@@ -243,7 +252,8 @@ class Multisample(object):
         xml += '   <layer name="Default">\n'
 
         for sample in self.samples:
-            xml += '      <sample file="{}" gain="{}" sample-start="{}" sample-stop="{}">\n'.format(os.path.basename(sample.get('file','')),sample.get('gain','0.00'),sample.get('sample-start','0.000'),sample.get('sample-stop','0.000'))
+            zonelogic = 'round-robin' if sample.get('playlogic') == "conditional" else 'always-play'
+            xml += '      <sample file="{}" gain="{}" sample-start="{}" sample-stop="{}" zone-logic="{}">\n'.format(os.path.basename(sample.get('file','')),sample.get('gain','0.00'),sample.get('sample-start','0.000'),sample.get('sample-stop','0.000'),zonelogic)
             xml += '         <key high="{}" low="{}" root="{}" track="{}" tune="{}"/>\n'.format(sample.get('keyhigh',''),sample.get('keylow',''),sample.get('root',''),sample.get('track','true'),sample.get('tune','0.0'))
             vhigh = int(sample.get('velocityhigh','127'))
             vlow = int(sample.get('velocitylow','0'))
