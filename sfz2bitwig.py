@@ -366,7 +366,7 @@ class Multisample(object):
                 str1 = fid.read(8)
                 size, id = struct.unpack('<ii',str1)
                 size = size + (size % 2)                              # the size should be even, see WAV specfication, e.g. 16=>16, 23=>24
-                label = fid.read(size-4).rstrip('\x00')               # remove the trailing null characters
+                label = fid.read(size-4).rstrip(b'\x00')               # remove the trailing null characters
                 #_cuelabels.append(label)
                 _markersdict[id]['label'] = label                           # needed to match labels and markers
 
