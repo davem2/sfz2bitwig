@@ -393,7 +393,12 @@ class Multisample(object):
             + ((loops,) if readloops else ()) \
             + ((pitch,) if readpitch else ())
 
+    def remove_comment(self, line):
+        return re.sub(r"//.*?$", "", line)
+
     def sfz_note_to_midi_key(self, sfz_note):
+        sfz_note = self.remove_comment(sfz_note).strip()
+
         SFZ_NOTE_LETTER_OFFSET = {'a': 9, 'b': 11, 'c': 0, 'd': 2, 'e': 4, 'f': 5, 'g': 7}
         letter = sfz_note[0].lower()
         if letter not in SFZ_NOTE_LETTER_OFFSET.keys():
